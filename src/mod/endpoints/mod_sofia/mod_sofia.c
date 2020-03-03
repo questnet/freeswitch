@@ -677,6 +677,15 @@ static switch_status_t sofia_acknowledge_call(switch_core_session_t *session)
 	return SWITCH_STATUS_FALSE;
 }
 
+static switch_status_t sofia_call_forwarded(switch_core_session_t* session) 
+{
+	struct private_object* tech_pvt = switch_core_session_get_private(session);
+	const char* session_id_header = sofia_glue_session_id_header(session, tech_pvt->profile);
+
+	nua_respond(tech_pvt->nh, SIP_181_CALL_IS_BEING_FORWARDED, TAG_IF(!zstr(session_id_header), SIPTAG_HEADER_STR(session_id_header)), TAG_END());
+	return SWITCH_STATUS_SUCCESS;
+}
+
 static switch_status_t sofia_answer_channel(switch_core_session_t *session)
 {
 	private_object_t *tech_pvt = (private_object_t *) switch_core_session_get_private(session);
@@ -2298,6 +2307,11 @@ static switch_status_t sofia_receive_message(switch_core_session_t *session, swi
 				/* Dialplan should really use acknowledge_call application instead of respond application to send 100 */
 				if (code == 100) {
 					status = sofia_acknowledge_call(session);
+					goto end_lock;
+				}
+
+				if (code == 181) {
+					status = sofia_call_forwarded(session);
 					goto end_lock;
 				}
 
