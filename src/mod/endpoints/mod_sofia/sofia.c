@@ -8108,7 +8108,9 @@ static void sofia_handle_sip_i_state(switch_core_session_t *session, int status,
 
 					if (sofia_test_flag(tech_pvt, TFLAG_SIP_HOLD)) {
 						hold_related = 2;
-					} else if (switch_stristr("sendonly", r_sdp) || switch_stristr("0.0.0.0", r_sdp) || switch_stristr("inactive", r_sdp)) {
+					}
+
+					if (switch_stristr("sendonly", r_sdp) || switch_stristr("0.0.0.0", r_sdp) || switch_stristr("inactive", r_sdp)) {
 						hold_related = 1;
 					}
 
