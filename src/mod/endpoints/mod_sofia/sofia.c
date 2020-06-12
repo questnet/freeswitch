@@ -8141,11 +8141,14 @@ static void sofia_handle_sip_i_state(switch_core_session_t *session, int status,
 								if (switch_stristr("inactive", r_sdp)) {
 									sofia_set_flag_locked(other_tech_pvt, TFLAG_SIP_HOLD_INACTIVE);
 									//switch_channel_set_variable(channel, "sofia_hold_inactive", "true");
+									switch_log_printf(SWITCH_CHANNEL_SESSION_LOG(session), SWITCH_LOG_DEBUG, "Setting HOLD_INACTIVE on the other leg!\n");
 								} else {
 									sofia_clear_flag_locked(other_tech_pvt, TFLAG_SIP_HOLD_INACTIVE);
+									switch_log_printf(SWITCH_CHANNEL_SESSION_LOG(session), SWITCH_LOG_DEBUG, "Clearing HOLD_INACTIVE on the other leg!\n");
 								}
 
 								if (hold_related == 1) {
+									switch_log_printf(SWITCH_CHANNEL_SESSION_LOG(session), SWITCH_LOG_DEBUG, "HoldRelated=1: Holding\n");
 									msg->message_id = SWITCH_MESSAGE_INDICATE_HOLD;
 									if (sofia_test_pflag(profile, PFLAG_MANAGE_SHARED_APPEARANCE)) {
 										const char *info = switch_channel_get_variable(channel, "presence_call_info");
@@ -8160,10 +8163,10 @@ static void sofia_handle_sip_i_state(switch_core_session_t *session, int status,
 									switch_channel_set_flag(channel, CF_LEG_HOLDING);
 									switch_channel_presence(tech_pvt->channel, "unknown", hold_msg, NULL);
 								} else {
+									switch_log_printf(SWITCH_CHANNEL_SESSION_LOG(session), SWITCH_LOG_DEBUG, "HoldRelated=2: Unholding\n");
 									hold_msg = "unhold";
 									msg->message_id = SWITCH_MESSAGE_INDICATE_UNHOLD;
 									sofia_clear_flag_locked(tech_pvt, TFLAG_SIP_HOLD);
-									sofia_clear_flag_locked(other_tech_pvt, TFLAG_SIP_HOLD_INACTIVE);
 									switch_channel_clear_flag(channel, CF_LEG_HOLDING);
 									switch_channel_presence(tech_pvt->channel, "unknown", hold_msg, NULL);
 								}
