@@ -8163,6 +8163,7 @@ static void sofia_handle_sip_i_state(switch_core_session_t *session, int status,
 									hold_msg = "unhold";
 									msg->message_id = SWITCH_MESSAGE_INDICATE_UNHOLD;
 									sofia_clear_flag_locked(tech_pvt, TFLAG_SIP_HOLD);
+									sofia_clear_flag_locked(other_tech_pvt, TFLAG_SIP_HOLD_INACTIVE);
 									switch_channel_clear_flag(channel, CF_LEG_HOLDING);
 									switch_channel_presence(tech_pvt->channel, "unknown", hold_msg, NULL);
 								}
