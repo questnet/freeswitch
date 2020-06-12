@@ -2153,6 +2153,7 @@ static switch_status_t sofia_receive_message(switch_core_session_t *session, swi
 	case SWITCH_MESSAGE_INDICATE_UNHOLD:
 		{
 			sofia_clear_flag_locked(tech_pvt, TFLAG_SIP_HOLD);
+			sofia_clear_flag_locked(tech_pvt, TFLAG_SIP_HOLD_INACTIVE);
 			switch_channel_clear_flag(channel, CF_LEG_HOLDING);
 			sofia_glue_do_invite(session);
 		}
