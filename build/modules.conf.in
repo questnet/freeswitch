@@ -1,5 +1,6 @@
 #applications/mod_abstraction
-applications/mod_av
+#Qn: we don't need video support and mod_av causes build errors with gcc -pedantic
+#applications/mod_av
 #applications/mod_avmd
 #applications/mod_bert
 #applications/mod_blacklist
