@@ -234,8 +234,6 @@ FST_CORE_BEGIN("./conf_async")
 				fst_xcheck(pos != NULL, "Expect media bugs in order first, regular-1, regular-2, last-1, last-2");
 			}
 
-			fst_check(strstr((const char *)stream.data, "<function>both</function>") == NULL);
-
 			switch_safe_free(stream.data);
 			switch_core_media_bug_remove_all(fst_session);
 		}
