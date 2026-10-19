@@ -790,6 +790,29 @@ SWITCH_DECLARE(switch_status_t) switch_core_media_bug_push_spy_frame(switch_medi
 	return SWITCH_STATUS_FALSE;
 }
 
+/*
+ * Link a bug that is neither first nor the only one into the list: regular bugs go in front of the first SMBF_LAST bug (or at the end if
+ * there is none), SMBF_LAST bugs go to the end. That keeps SMBF_LAST bugs behind every other bug, so they see the frames as modified by all of them.
+ * The caller holds session->bug_rwlock for writing.
+ */
+static void switch_core_media_bug_insert(switch_core_session_t *session, switch_media_bug_t *bug)
+{
+	switch_media_bug_t *bp = session->bugs, *prev = NULL;
+
+	while (bp && (switch_test_flag(bug, SMBF_LAST) || !switch_test_flag(bp, SMBF_LAST))) {
+		prev = bp;
+		bp = bp->next;
+	}
+
+	bug->next = bp;
+
+	if (prev) {
+		prev->next = bug;
+	} else {
+		session->bugs = bug;
+	}
+}
+
 #define MAX_BUG_BUFFER 1024 * 512
 SWITCH_DECLARE(switch_status_t) switch_core_media_bug_add(switch_core_session_t *session,
 														  const char *function,
@@ -865,6 +888,11 @@ SWITCH_DECLARE(switch_status_t) switch_core_media_bug_add(switch_core_session_t 
 		switch_thread_rwlock_unlock(session->bug_rwlock);
 	}
 #endif
+
+	if ((flags & SMBF_FIRST) && (flags & SMBF_LAST)) {
+		switch_log_printf(SWITCH_CHANNEL_SESSION_LOG(session), SWITCH_LOG_ERROR, "SMBF_FIRST and SMBF_LAST are mutually exclusive.\n");
+		return SWITCH_STATUS_GENERR;
+	}
 
 	if (!(bug = switch_core_session_alloc(session, sizeof(*bug)))) {
 		return SWITCH_STATUS_MEMERR;
@@ -993,7 +1021,7 @@ SWITCH_DECLARE(switch_status_t) switch_core_media_bug_add(switch_core_session_t 
 		}
 
 		if (!added && !bp->next) {
-			bp->next = bug;
+			switch_core_media_bug_insert(session, bug);
 			break;
 		}
 	}
