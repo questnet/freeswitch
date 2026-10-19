@@ -1888,6 +1888,8 @@ SMBF_THREAD_LOCK - Only let the same thread who created the bug remove it.
 SMBF_PRUNE -
 SMBF_NO_PAUSE -
 SMBF_STEREO_SWAP - Record in stereo: Write Stream - left channel, Read Stream - right channel
+SMBF_FIRST - Put the bug at the front of the list, before all other bugs
+SMBF_LAST - Keep the bug at the end of the list: bugs added later are linked in front of it (only honored at add time; exclusive with SMBF_FIRST)
 </pre>
 */
 typedef enum {
@@ -1919,7 +1921,8 @@ typedef enum {
 	SMBF_READ_VIDEO_PATCH = (1 << 24),
 	SMBF_READ_TEXT_STREAM = (1 << 25),
 	SMBF_FIRST = (1 << 26),
-	SMBF_PAUSE = (1 << 27)
+	SMBF_PAUSE = (1 << 27),
+	SMBF_LAST = (1 << 28)
 } switch_media_bug_flag_enum_t;
 typedef uint32_t switch_media_bug_flag_t;
 

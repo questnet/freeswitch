@@ -62,6 +62,18 @@ static switch_status_t partial_play_and_collect_input_callback(switch_core_sessi
 	return status;
 }
 
+static switch_bool_t noop_bug_callback(switch_media_bug_t *bug, void *user_data, switch_abc_type_t type)
+{
+	return SWITCH_TRUE;
+}
+
+static switch_status_t add_ordering_bug(switch_core_session_t *session, const char *function, switch_media_bug_flag_t flags)
+{
+	switch_media_bug_t *bug = NULL;
+
+	return switch_core_media_bug_add(session, function, NULL, noop_bug_callback, NULL, 0, SMBF_READ_PING | flags, &bug);
+}
+
 FST_CORE_BEGIN("./conf_async")
 {
 	FST_SUITE_BEGIN(switch_ivr_play_async)
@@ -193,6 +205,37 @@ FST_CORE_BEGIN("./conf_async")
 			fst_xcheck(switch_channel_var_true(fst_channel, "record_post_process_test_pass"), "Expect record_post_process_test_pass channel variable set to true");
 
 			unlink(record_filename);
+		}
+		FST_SESSION_END()
+
+		FST_SESSION_BEGIN(media_bug_last_ordering)
+		{
+			const char *expected[] = { "first", "regular-1", "regular-2", "last-1", "last-2" };
+			switch_stream_handle_t stream = { 0 };
+			const char *pos;
+			int i;
+
+			fst_check(add_ordering_bug(fst_session, "last-1", SMBF_LAST) == SWITCH_STATUS_SUCCESS);
+			/* the only bug is SMBF_LAST: a regular bug must become the head */
+			fst_check(add_ordering_bug(fst_session, "regular-1", 0) == SWITCH_STATUS_SUCCESS);
+			fst_check(add_ordering_bug(fst_session, "first", SMBF_FIRST) == SWITCH_STATUS_SUCCESS);
+			fst_check(add_ordering_bug(fst_session, "last-2", SMBF_LAST) == SWITCH_STATUS_SUCCESS);
+			fst_check(add_ordering_bug(fst_session, "regular-2", 0) == SWITCH_STATUS_SUCCESS);
+			fst_check(add_ordering_bug(fst_session, "both", SMBF_FIRST | SMBF_LAST) == SWITCH_STATUS_GENERR);
+
+			SWITCH_STANDARD_STREAM(stream);
+			switch_core_media_bug_enumerate(fst_session, &stream);
+			pos = (const char *)stream.data;
+
+			for (i = 0; i < (int)(sizeof(expected) / sizeof(expected[0])); i++) {
+				const char *tag = switch_core_session_sprintf(fst_session, "<function>%s</function>", expected[i]);
+
+				pos = pos ? strstr(pos, tag) : NULL;
+				fst_xcheck(pos != NULL, "Expect media bugs in order first, regular-1, regular-2, last-1, last-2");
+			}
+
+			switch_safe_free(stream.data);
+			switch_core_media_bug_remove_all(fst_session);
 		}
 		FST_SESSION_END()
 	}
