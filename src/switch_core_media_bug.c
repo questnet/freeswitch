@@ -1019,11 +1019,10 @@ SWITCH_DECLARE(switch_status_t) switch_core_media_bug_add(switch_core_session_t 
 		if (bp->ready && !switch_test_flag(bp, SMBF_TAP_NATIVE_READ) && !switch_test_flag(bp, SMBF_TAP_NATIVE_WRITE)) {
 			tap_only = 0;
 		}
+	}
 
-		if (!added && !bp->next) {
-			switch_core_media_bug_insert(session, bug);
-			break;
-		}
+	if (!added) {
+		switch_core_media_bug_insert(session, bug);
 	}
 
 	switch_thread_rwlock_unlock(session->bug_rwlock);
