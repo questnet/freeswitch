@@ -792,7 +792,8 @@ SWITCH_DECLARE(switch_status_t) switch_core_media_bug_push_spy_frame(switch_medi
 
 /*
  * Link a bug that is neither first nor the only one into the list: regular bugs go in front of the first SMBF_LAST bug (or at the end if
- * there is none), SMBF_LAST bugs go to the end. That keeps SMBF_LAST bugs behind every other bug, so they see the frames as modified by all of them.
+ * there is none), SMBF_LAST bugs go to the end. That keeps SMBF_LAST bugs behind every other bug, so their stream and replace callbacks run after
+ * those of every other bug.
  * The caller holds session->bug_rwlock for writing.
  */
 static void switch_core_media_bug_insert(switch_core_session_t *session, switch_media_bug_t *bug)
